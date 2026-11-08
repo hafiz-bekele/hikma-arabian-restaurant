@@ -9,7 +9,10 @@ import {
   RefreshCw,
   Calendar,
   DollarSign,
-  AlertCircle
+  AlertCircle,
+  Upload,
+  Image as ImageIcon,
+  Link as LinkIcon
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -25,6 +28,7 @@ export default function AdminPage() {
 
   // New item form state
   const [showAddForm, setShowAddForm] = useState(false);
+  const [imageInputMode, setImageInputMode] = useState('file'); // 'file' | 'url'
   const [newItem, setNewItem] = useState({
     name_am: '',
     name_en: '',
@@ -34,7 +38,41 @@ export default function AdminPage() {
     description_en: '',
     is_featured: false,
     is_available: true,
+    image: '',
   });
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        const maxDim = 1200;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          } else {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        setNewItem(prev => ({ ...prev, image: dataUrl }));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -137,7 +175,7 @@ export default function AdminPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setStatusMessage('አዲስ ምግብ ወደ SQLite ዳታቤዝ ተጨምሯል!');
+        setStatusMessage('አዲስ ምግብ በፎቶው እና በዋጋው ወደ SQLite ዳታቤዝ ተጨምሯል!');
         setShowAddForm(false);
         setNewItem({
           name_am: '',
@@ -148,6 +186,7 @@ export default function AdminPage() {
           description_en: '',
           is_featured: false,
           is_available: true,
+          image: '',
         });
         loadData();
       }
@@ -300,6 +339,91 @@ export default function AdminPage() {
                     placeholder="አጭር መግለጫ"
                   />
                 </div>
+
+                {/* Dish Photo: Link or Device Upload */}
+                <div className="sm:col-span-2 p-4 rounded-xl bg-sand-100/70 dark:bg-[#0B1712] border border-sand-300 dark:border-forest-700 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-forest-900 dark:text-cream-50">
+                      የምግብ ፎቶ (Dish Image)
+                    </label>
+                    <div className="flex items-center gap-1 bg-sand-200 dark:bg-forest-800 p-0.5 rounded-lg text-xs font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => setImageInputMode('file')}
+                        className={`px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 ${
+                          imageInputMode === 'file'
+                            ? 'bg-white dark:bg-forest-900 text-forest-900 dark:text-amber-400 shadow-xs'
+                            : 'text-charcoal-600 dark:text-sand-300'
+                        }`}
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span>ከመሳሪያ ይስቀሉ (Device)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageInputMode('url')}
+                        className={`px-2.5 py-1 rounded-md transition-colors flex items-center gap-1 ${
+                          imageInputMode === 'url'
+                            ? 'bg-white dark:bg-forest-900 text-forest-900 dark:text-amber-400 shadow-xs'
+                            : 'text-charcoal-600 dark:text-sand-300'
+                        }`}
+                      >
+                        <LinkIcon className="w-3 h-3" />
+                        <span>ሊንክ (URL)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {imageInputMode === 'file' ? (
+                    <div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="block w-full text-xs text-charcoal-600 dark:text-sand-300 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-forest-800 file:text-cream-50 hover:file:bg-forest-700 cursor-pointer"
+                      />
+                      <p className="text-[11px] text-charcoal-500 dark:text-sand-400 mt-1">
+                        ከስልክዎ ካሜራ ወይም ከኮምፒውተር ፎቶ ይምረጡ (በራስ-ሰር ተመጥኖ በዳታቤዝ ይቀመጣል)።
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        type="text"
+                        value={newItem.image}
+                        onChange={e => setNewItem({ ...newItem, image: e.target.value })}
+                        placeholder="https://example.com/dish.jpg ወይም /images/dishes/..."
+                        className="w-full px-3 py-2 rounded-lg bg-white dark:bg-[#13221C] border border-sand-300 dark:border-forest-700 text-charcoal-900 dark:text-cream-50 text-xs"
+                      />
+                    </div>
+                  )}
+
+                  {/* Photo Preview if selected */}
+                  {newItem.image && (
+                    <div className="flex items-center gap-3 pt-2">
+                      <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-forest-950 border border-amber-500/50 shadow-sm shrink-0">
+                        <img
+                          src={newItem.image}
+                          alt="Dish Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="text-xs space-y-1">
+                        <span className="text-emerald-700 dark:text-emerald-400 font-bold block">
+                          ✓ ፎቶ ተመርጧል (Photo Selected)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setNewItem({ ...newItem, image: '' })}
+                          className="text-rose-600 dark:text-rose-400 hover:underline font-semibold"
+                        >
+                          ፎቶውን አስወግድ (Remove)
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="sm:col-span-2 flex justify-end gap-3 pt-2">
                   <button
                     type="button"
@@ -324,6 +448,7 @@ export default function AdminPage() {
             <table className="w-full text-left text-sm">
               <thead className="bg-sand-200/80 dark:bg-[#182E25] text-forest-900 dark:text-cream-50 border-b border-sand-300 dark:border-forest-800 font-bold">
                 <tr>
+                  <th className="py-3 px-4">ፎቶ (Photo)</th>
                   <th className="py-3 px-4">ምግብ (Name)</th>
                   <th className="py-3 px-4">ምድብ (Category)</th>
                   <th className="py-3 px-4">ዋጋ (Price)</th>
@@ -336,6 +461,21 @@ export default function AdminPage() {
                   const isEditing = editingItem && editingItem.id === item.id;
                   return (
                     <tr key={item.id} className="hover:bg-sand-100/50 dark:hover:bg-forest-900/40 transition-colors">
+                      <td className="py-3 px-4">
+                        {item.image ? (
+                          <div className="w-12 h-12 rounded-xl overflow-hidden bg-forest-950 border border-sand-300 dark:border-forest-700 shadow-xs">
+                            <img
+                              src={item.image}
+                              alt={item.name_am}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-12 h-12 rounded-xl bg-sand-200 dark:bg-forest-800 text-charcoal-400 dark:text-sand-400 flex items-center justify-center border border-dashed border-sand-300 dark:border-forest-700">
+                            <ImageIcon className="w-5 h-5" />
+                          </div>
+                        )}
+                      </td>
                       <td className="py-3 px-4 font-semibold text-forest-900 dark:text-cream-50">
                         <div>{item.name_am}</div>
                         <div className="text-xs text-charcoal-600 dark:text-sand-400">{item.name_en}</div>

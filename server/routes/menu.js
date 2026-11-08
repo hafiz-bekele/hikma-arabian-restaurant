@@ -120,7 +120,7 @@ router.put('/items/:id', (req, res) => {
     const { id } = req.params;
     const {
       name_am, name_en, description_am, description_en,
-      price, is_featured, is_available, tags, category_slug
+      price, is_featured, is_available, tags, category_slug, image
     } = req.body;
 
     const existing = db.prepare('SELECT * FROM menu_items WHERE id = ?').get(id);
@@ -138,7 +138,8 @@ router.put('/items/:id', (req, res) => {
         is_featured = COALESCE(?, is_featured),
         is_available = COALESCE(?, is_available),
         tags = COALESCE(?, tags),
-        category_slug = COALESCE(?, category_slug)
+        category_slug = COALESCE(?, category_slug),
+        image = COALESCE(?, image)
       WHERE id = ?
     `);
 
@@ -152,6 +153,7 @@ router.put('/items/:id', (req, res) => {
       is_available !== undefined ? (is_available ? 1 : 0) : null,
       tags !== undefined ? (Array.isArray(tags) ? tags.join(',') : tags) : null,
       category_slug !== undefined ? category_slug : null,
+      image !== undefined ? image : null,
       id
     );
 
