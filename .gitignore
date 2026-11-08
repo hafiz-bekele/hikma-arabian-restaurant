@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Production build output (generated on build)
+dist/
+
+# Local SQLite databases (auto-created and seeded on startup)
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Environment & OS files
+.env
+*.log
+.DS_Store

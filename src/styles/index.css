@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-forest-900: #0E2A20;
+    --color-forest-800: #14402F;
+    --color-cream-50: #FDFAF5;
+    --color-cream-100: #FBF4E9;
+    --color-sand-200: #F1E6D4;
+    --color-amber-500: #D9912B;
+    --color-terracotta: #A85A3C;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #FDFAF5;
+    color: #1A1A18;
+    font-family: 'DM Sans', 'Noto Sans Ethiopic', system-ui, sans-serif;
+  }
+
+  /* Ethiopic typographic adjustments */
+  :lang(am) {
+    line-height: 1.6;
+    letter-spacing: 0;
+    word-spacing: 0.02em;
+  }
+
+  :lang(am) h1,
+  :lang(am) h2,
+  :lang(am) h3 {
+    line-height: 1.35;
+  }
+}
+
+/* Signature Arabic Arch element */
+.arch-frame {
+  border-radius: 50% 50% 16px 16px / 32% 32% 16px 16px;
+  overflow: hidden;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom scrollbar for horizontal categories */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Print Stylesheet for In-Venue Paper Menu */
+@media print {
+  header,
+  footer,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-size: 11pt;
+  }
+
+  .print\:p-0 {
+    padding: 0 !important;
+  }
+
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+
+  .print\:border-b {
+    border-bottom: 1px solid #ddd !important;
+  }
+}

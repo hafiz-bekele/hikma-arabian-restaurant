@@ -1,0 +1,22 @@
+{
+  "short_name": "Hikma Restaurant",
+  "name": "Hikma Arabian Restaurant | ሒክማ አረብያን ሬስቶራንት",
+  "description": "Authentic Arabian dining, slow-cooked Mandi, and traditional coffee in Kombolcha, Ethiopia.",
+  "icons": [
+    {
+      "src": "/favicon.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/images/logo.jpg",
+      "type": "image/jpeg",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0B1712",
+  "theme_color": "#0E2A20",
+  "display": "standalone",
+  "orientation": "portrait"
+}
