@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Utensils, Sparkles, Filter, Phone, MessageCircle } from 'lucide-react';
+import { Search, Utensils, Sparkles, Filter, Phone, MessageCircle, Printer, X, Plus, Minus } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import DishCard from '../components/DishCard';
 import StatusPill from '../components/StatusPill';
@@ -10,6 +10,8 @@ export default function MenuPage({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDish, setSelectedDish] = useState(null);
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     fetch('/api/menu/full')
@@ -38,12 +40,28 @@ export default function MenuPage({ onNavigate }) {
     return nameAm.includes(q) || nameEn.includes(q) || descAm.includes(q) || descEn.includes(q);
   });
 
+  const handleOrderWhatsApp = () => {
+    if (!selectedDish) return;
+    const dishName = lang === 'am' ? selectedDish.name_am : (selectedDish.name_en || selectedDish.name_am);
+    const totalPrice = (selectedDish.price * quantity).toLocaleString();
+    const msg = `ሰላም! ${quantity}x ${dishName} (${totalPrice} ብር) ከሒክማ አረብያን ሬስቶራንት ማዘዝ እፈልጋለሁ።`;
+    window.open(`https://wa.me/251991589097?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer');
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 print:p-0">
       {/* Page Header */}
       <div className="text-center max-w-2xl mx-auto space-y-3">
-        <div className="flex items-center justify-center gap-2 mb-2">
+        <div className="flex items-center justify-center gap-2 mb-2 print:hidden">
           <StatusPill />
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-sand-300 dark:border-forest-700 text-forest-900 dark:text-cream-100 bg-sand-100 dark:bg-[#13221C] hover:bg-sand-200 dark:hover:bg-forest-800 text-xs font-semibold shadow-xs transition-colors"
+            title="Print Paper Menu"
+          >
+            <Printer className="w-3.5 h-3.5 text-amber-500" />
+            <span>{lang === 'am' ? 'ምናሌ አትም' : 'Print Menu'}</span>
+          </button>
         </div>
         <h1 className="text-3xl sm:text-5xl font-extrabold text-forest-900 dark:text-cream-50 tracking-tight">
           {t('menu.title')}
@@ -53,8 +71,8 @@ export default function MenuPage({ onNavigate }) {
         </p>
       </div>
 
-      {/* Search and Category Filter Toolbar */}
-      <div className="space-y-4">
+      {/* Search and Category Filter Toolbar (Hidden on print) */}
+      <div className="space-y-4 print:hidden">
         {/* Search Input */}
         <div className="max-w-md mx-auto relative">
           <Search className="w-5 h-5 text-charcoal-600 dark:text-sand-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -151,7 +169,14 @@ export default function MenuPage({ onNavigate }) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {catItems.map((item) => (
-                    <DishCard key={item.id} item={item} />
+                    <DishCard
+                      key={item.id}
+                      item={item}
+                      onSelect={(dish) => {
+                        setSelectedDish(dish);
+                        setQuantity(1);
+                      }}
+                    />
                   ))}
                 </div>
               </div>
@@ -162,13 +187,20 @@ export default function MenuPage({ onNavigate }) {
         // Render filtered flat grid
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredItems.map((item) => (
-            <DishCard key={item.id} item={item} />
+            <DishCard
+              key={item.id}
+              item={item}
+              onSelect={(dish) => {
+                setSelectedDish(dish);
+                setQuantity(1);
+              }}
+            />
           ))}
         </div>
       )}
 
-      {/* Allergy and Customer Support Note */}
-      <div className="bg-sand-100 dark:bg-[#13221C] rounded-2xl p-6 border border-sand-300 dark:border-forest-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+      {/* Allergy and Customer Support Note (Hidden on print) */}
+      <div className="bg-sand-100 dark:bg-[#13221C] rounded-2xl p-6 border border-sand-300 dark:border-forest-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left print:hidden">
         <div>
           <p className="text-sm font-semibold text-forest-900 dark:text-cream-50">
             ℹ️ {t('menu.allergyNote')}
@@ -194,6 +226,108 @@ export default function MenuPage({ onNavigate }) {
           </a>
         </div>
       </div>
+
+      {/* INTERACTIVE DISH ORDER MODAL */}
+      {selectedDish && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in duration-200 print:hidden">
+          <div
+            className="relative w-full max-w-lg bg-white dark:bg-[#13221C] rounded-3xl border border-sand-300 dark:border-forest-700 shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedDish(null)}
+              className="absolute top-3 right-3 z-10 w-9 h-9 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Dish Photo if available */}
+            {selectedDish.image && (
+              <div className="relative h-56 sm:h-64 bg-forest-950 overflow-hidden">
+                <img
+                  src={selectedDish.image}
+                  alt={selectedDish.name_am}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                {selectedDish.is_featured && (
+                  <span className="absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold bg-amber-500 text-charcoal-900 shadow-md">
+                    ★ {t('menu.popular')}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-5">
+              <div>
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className="text-2xl font-bold font-display text-forest-900 dark:text-cream-50">
+                    {lang === 'am' ? selectedDish.name_am : (selectedDish.name_en || selectedDish.name_am)}
+                  </h3>
+                  <span className="px-3.5 py-1 rounded-xl bg-amber-500 text-charcoal-900 font-extrabold text-lg tabular-nums shrink-0 shadow-xs">
+                    {(selectedDish.price * quantity).toLocaleString()} {lang === 'am' ? 'ብር' : 'ETB'}
+                  </span>
+                </div>
+                {selectedDish.name_en && (
+                  <p className="text-xs text-charcoal-600 dark:text-sand-300 mt-0.5">
+                    {selectedDish.name_en}
+                  </p>
+                )}
+              </div>
+
+              {selectedDish.description_am && (
+                <p className="text-sm text-charcoal-700 dark:text-cream-100 leading-relaxed">
+                  {lang === 'am' ? selectedDish.description_am : (selectedDish.description_en || selectedDish.description_am)}
+                </p>
+              )}
+
+              {/* Quantity Selector */}
+              <div className="flex items-center justify-between pt-3 border-t border-sand-200 dark:border-forest-800">
+                <span className="text-sm font-semibold text-forest-900 dark:text-cream-50">
+                  {lang === 'am' ? 'ብዛት' : 'Quantity'}:
+                </span>
+                <div className="flex items-center gap-3 bg-sand-200 dark:bg-forest-900/90 rounded-full px-3 py-1.5 border border-sand-300 dark:border-forest-700">
+                  <button
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="w-7 h-7 rounded-full bg-white dark:bg-forest-800 text-forest-900 dark:text-cream-50 flex items-center justify-center font-bold hover:bg-amber-500 hover:text-charcoal-900 transition-colors"
+                  >
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <span className="text-base font-bold text-forest-900 dark:text-cream-50 w-6 text-center tabular-nums">
+                    {quantity}
+                  </span>
+                  <button
+                    onClick={() => setQuantity(quantity + 1)}
+                    className="w-7 h-7 rounded-full bg-white dark:bg-forest-800 text-forest-900 dark:text-cream-50 flex items-center justify-center font-bold hover:bg-amber-500 hover:text-charcoal-900 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Order Actions */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <button
+                  onClick={handleOrderWhatsApp}
+                  className="w-full py-3.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center justify-center gap-2 shadow-md transition-colors text-sm"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  <span>{lang === 'am' ? 'በ WhatsApp እዘዙ' : 'Order via WhatsApp'}</span>
+                </button>
+                <a
+                  href="tel:+251991589097"
+                  className="w-full py-3.5 px-4 rounded-xl bg-forest-800 dark:bg-amber-500 hover:bg-forest-700 dark:hover:bg-amber-400 text-cream-50 dark:text-charcoal-900 font-bold flex items-center justify-center gap-2 shadow-sm transition-colors text-sm"
+                >
+                  <Phone className="w-4 h-4" />
+                  <span>0991 589 097</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

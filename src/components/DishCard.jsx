@@ -13,7 +13,9 @@ export default function DishCard({ item, onSelect }) {
   return (
     <div
       onClick={onSelect ? () => onSelect(item) : undefined}
-      className="bg-white dark:bg-[#13221C] rounded-2xl border border-sand-300/80 dark:border-forest-800 p-4 sm:p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group overflow-hidden"
+      className={`bg-white dark:bg-[#13221C] rounded-2xl border border-sand-300/80 dark:border-forest-800 p-4 sm:p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group overflow-hidden ${
+        onSelect ? 'cursor-pointer hover:border-amber-500/80 dark:hover:border-amber-500/60' : ''
+      }`}
     >
       <div>
         {/* Dish Image if available */}
